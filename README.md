@@ -3,11 +3,13 @@ Chismochat es un chat que permite al usuario crear diferentes salas de chat en d
 ### Version
 2.0
 ### Stack de Tecnologías
-ChismoChat cuenta con las siguientes stack de tecnologias:
+ChismoChat se realizó con el siguiente stack de tecnologias:
 * Html
 * Bootstrap
 * JavaScript
 * ServerSent
+* Java 7
+* java jdk 8
 
 ### Funcionalidades
 ChismoChat cuenta con las siguientes funcionalidades:
