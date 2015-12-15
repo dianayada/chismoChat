@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Chat Server</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+        <style>
+            .bod{
+                background-image: url(imgs/fondo.jpg);
+                backgrottund-size: cover;
+            }
+            .img{
+                height: 30px;
+                width: 30px;
+            }
+            .right{
+                width: 72%;
+                float: right;
+            }
+            .left{
+                width: 25%;
+                float: left;
+            }
+           
+        </style>
+    </head>
+    <body class="bod"> 
+        <div class="container">
+            <div class="right">
+                <div class="panel panel-default">
+                    <div class="panel-heading" id="cualquiera">
+                        Sala: Inicial
+                    </div>
+                    <div class="panel-body">
+                        <div id="mensajes"></div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Chat
+                    </div>
+                    <div class="panel-body">
+                        Usuario:
+                        <input type="text" class="form-control" id="user" placeholder="Nombre de usuario">
+                        Mensaje:
+                        <textarea class="form-control" id="mensaje" ></textarea>
+                        <br>
+                        <button type="button" class="btn btn-primary" id="enviar">Enviar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="left">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Crea nuevo grupo
+                    </div>
+                    <div class="panel-body">
+                        <input type="text" class="form-control" id="grupoNombre" placeholder="Nombre del grupo">
+                        <br>
+                        <button type="button" class="btn btn-primary" id="enviaGrupo">Crear</button>
+                        <br>
+                    </div>
+                </div>
+            </div>
+            <div class="left">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Grupos
+                    </div>
+                    <div class="panel-body" id="grupos">
+                        <input type='radio' name='grupo' checked onclick='cambio()' value='inicial'/>inicial<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            var aux="inicial";
+            function cambio(){
+                var sala;
+                sala=seleccionado();
+                document.getElementById("cualquiera").innerHTML="<h4>Sala: "+sala+"</h4>";
+            }
+            
+            function seleccionado(){//regresa el valor del rio seleccionado
+                var grupo=document.getElementsByName("grupo");
+                for(var i=0;i<grupo.length;i++){
+                    if(grupo[i].type === 'radio' && grupo[i].checked){
+                        sala=grupo[i].value;
+                    }                    
+                }
+                return sala;
+            }
+            
+            var msj=document.getElementById("mensaje");
+            var msjs=document.getElementById("mensajes");
+            var user=document.getElementById("user");
+            var nombreGrupo=document.getElementById("grupoNombre");
+            var eliminar=document.getElementById("otrocoso");
+            
+            
+            
+            var evtSource =new EventSource("http://localhost:8080/serverSent/ChatServlet");
+            evtSource.onmessage=function(e){
+                var data = JSON.parse(e.data);
+                var l;
+                var grupo=document.getElementById("grupos");
+                
+                var grupo2=document.getElementsByName("grupo");
+                gl=grupo2.length;
+                var grupo3=[];
+                
+                document.getElementsByName("grupo");
+                if(data.eliminar!==aux){
+                    for(i=0;i<gl;i++){
+                        grupo3[i]=grupo2[i].value;
+                    }
+                    document.getElementById("grupos").innerHTML="<input type='radio' name='grupo' checked onclick='cambio()' value='inicial'/>inicial<br>";
+
+                    for(i=0;i<gl;i++){
+                        if(grupo3[i]!=="inicial"&&grupo3[i]!==data.eliminar){
+                            document.getElementById("grupos").innerHTML+="<input type='radio' name='grupo' onclick='cambio()' value='"+grupo3[i]+"'/>"+grupo3[i]+"<br>";                       
+                        }
+
+                    }
+                    aux=data.eliminar;
+                }
+                
+                             
+                if(data.user!=="null" || data.message!=="null"){
+                    var received="<p><b>"+data.user+"</b>: "+data.message+ "</p>\n";
+                    sala=seleccionado();
+                    if(sala===data.sala){
+                        msjs.innerHTML+=received;   
+                    }              
+                }               
+            };
+            
+           evtSource.addEventListener('agregaGrupo',function(e){
+                console.log(e);
+                var data = JSON.parse(e.data);
+                if(data.grupo!=="null"){
+                    document.getElementById("grupos").innerHTML+="<input type='radio' name='grupo'  onclick='cambio()' value='"+data.grupo+"'/>"+data.grupo+"<br>";
+                }
+                
+            });
+            evtSource.onerror=function(e){
+                alert("EventSource fallido");
+            };
+            
+            
+            var enviaGrupo=document.getElementById("enviaGrupo");
+           
+            enviaGrupo.addEventListener('click',function(){
+                var request =new XMLHttpRequest();
+                request.addEventListener('load', function(){
+                });
+                request.open('POST','http://localhost:8080/serverSent/ChatServlet',true);
+                request.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
+                
+                request.send("grupo="+nombreGrupo.value);
+            });
+            
+            var message=document.getElementById("enviar");
+            
+            message.addEventListener('click',function(){
+                var request =new XMLHttpRequest();
+                request.addEventListener('load', function(){
+                    console.log('message sent!');
+                });
+                var grupo=document.getElementsByName("grupo");
+                var sala;
+                for(var i=0;i<grupo.length;i++){
+                    if(grupo[i].type === 'radio' && grupo[i].checked){
+                        sala=grupo[i].value;
+                    }
+                    
+                }
+                
+                request.open('POST','http://localhost:8080/serverSent/ChatServlet',true);
+                request.setRequestHeader("Content-type","application/x-www-form-urlencoded; charset=utf-8");
+                
+                request.send("text="+msj.value+"&user="+user.value+"&sala="+sala);
+            });
+            
+            </script>
+</body>  
+</html>
